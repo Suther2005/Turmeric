@@ -1,0 +1,25 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+
+# Local environment files
+backend/.env
+frontend/.env
+
+# Local database
+*.db
+
+# Runtime/generated uploads
+backend/uploads/images/*
+backend/uploads/heatmaps/*
+backend/uploads/reports/*
+!backend/uploads/images/.gitkeep
+!backend/uploads/heatmaps/.gitkeep
+!backend/uploads/reports/.gitkeep
+
+# Local smoke-test reports
+report_smoke_test_*.pdf
+
+# Node and frontend build artifacts
+frontend/node_modules/
+frontend/dist/
