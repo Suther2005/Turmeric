@@ -20,7 +20,8 @@ services:
           name: turmeric-db
           property: connectionString
 
-  - type: static
+  - type: web
+    env: static
     name: turmeric-frontend
     rootDir: frontend
     buildCommand: npm ci && npm run build
