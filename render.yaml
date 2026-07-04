@@ -28,10 +28,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: turmeric-backend
-          property: url
+        sync: false
 
 databases:
   - name: turmeric-db
