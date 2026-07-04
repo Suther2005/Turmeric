@@ -233,6 +233,46 @@ gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
 
 ---
 
+## ☁️ Deploy (Render Blueprint)
+
+This repo includes [render.yaml](render.yaml) so backend, frontend, and database can be provisioned together.
+
+### 1) Push latest code
+
+```bash
+git push origin main
+```
+
+### 2) Create Render Blueprint
+
+1. Open Render Dashboard → **New** → **Blueprint**
+2. Connect this GitHub repo
+3. Render auto-detects [render.yaml](render.yaml)
+4. Click **Apply**
+
+### 3) Set backend CORS origin
+
+After first deploy, copy your frontend URL and set backend env var:
+
+```text
+CORS_ORIGINS=https://<your-frontend-domain>
+```
+
+You can also provide multiple origins as comma-separated values.
+
+### 4) Verify
+
+- Backend health: `https://<backend-domain>/api/health`
+- Frontend app: `https://<frontend-domain>`
+
+### Notes
+
+- Backend runs with Gunicorn in production.
+- Frontend is deployed as a static site.
+- [backend/.env.example](backend/.env.example) and [frontend/.env.example](frontend/.env.example) include required variables.
+
+---
+
 ## 🤝 Contributing
 
 1. Fork the repository

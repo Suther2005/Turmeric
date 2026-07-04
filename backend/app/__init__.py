@@ -25,7 +25,10 @@ def create_app(config_name=None):
     # Initialize extensions
     db.init_app(app)
     jwt.init_app(app)
-    CORS(app, origins=app.config.get('CORS_ORIGINS', '*'), supports_credentials=True)
+    cors_origins = app.config.get('CORS_ORIGINS', '*')
+    if isinstance(cors_origins, str) and ',' in cors_origins:
+        cors_origins = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+    CORS(app, origins=cors_origins, supports_credentials=True)
 
     # Create upload directories
     upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')

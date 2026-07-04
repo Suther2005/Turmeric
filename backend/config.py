@@ -7,6 +7,13 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
 
 
+def _normalize_database_url(db_url: str) -> str:
+    """Normalize provider URLs (e.g. postgres://) for SQLAlchemy."""
+    if db_url.startswith('postgres://'):
+        return db_url.replace('postgres://', 'postgresql://', 1)
+    return db_url
+
+
 class BaseConfig:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'dev-jwt-secret-change-in-production')
@@ -19,12 +26,17 @@ class BaseConfig:
     DB_USER = os.environ.get('DB_USER', 'root')
     DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
 
-    SQLALCHEMY_DATABASE_URI = (
-        f"mysql+pymysql://{os.environ.get('DB_USER', 'root')}:"
-        f"{os.environ.get('DB_PASSWORD', '')}@"
-        f"{os.environ.get('DB_HOST', 'localhost')}:"
-        f"{os.environ.get('DB_PORT', '3306')}/"
-        f"{os.environ.get('DB_NAME', 'turmericare')}"
+    SQLALCHEMY_DATABASE_URI = _normalize_database_url(
+        os.environ.get(
+            'DATABASE_URL',
+            (
+                f"mysql+pymysql://{os.environ.get('DB_USER', 'root')}:"
+                f"{os.environ.get('DB_PASSWORD', '')}@"
+                f"{os.environ.get('DB_HOST', 'localhost')}:"
+                f"{os.environ.get('DB_PORT', '3306')}/"
+                f"{os.environ.get('DB_NAME', 'turmericare')}"
+            )
+        )
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
@@ -46,9 +58,11 @@ class DevelopmentConfig(BaseConfig):
     DEBUG = True
     FLASK_ENV = 'development'
     SQLALCHEMY_ECHO = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL',
-        f"sqlite:///{(BASE_DIR / 'turmericare.db').as_posix()}"
+    SQLALCHEMY_DATABASE_URI = _normalize_database_url(
+        os.environ.get(
+            'DATABASE_URL',
+            f"sqlite:///{(BASE_DIR / 'turmericare.db').as_posix()}"
+        )
     )
 
 
