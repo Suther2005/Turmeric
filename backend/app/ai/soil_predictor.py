@@ -1,4 +1,10 @@
 from typing import Optional
+import numpy as np
+import random
+try:
+    from sklearn.ensemble import RandomForestClassifier
+except ImportError:
+    RandomForestClassifier = None
 
 # Ideal turmeric growing conditions
 IDEAL_CONDITIONS = {
@@ -23,7 +29,6 @@ PARAMETER_WEIGHTS = {
     'humidity':       0.05,
 }
 
-# Map parameter name → (min_key, max_key, optimal_key)
 PARAM_CONDITION_KEYS = {
     'ph':             ('ph_min',             'ph_max',             'ph_optimal'),
     'nitrogen':       ('nitrogen_min',       'nitrogen_max',       'nitrogen_optimal'),
@@ -35,16 +40,76 @@ PARAM_CONDITION_KEYS = {
     'humidity':       ('humidity_min',       'humidity_max',       'humidity_optimal'),
 }
 
-
 class SoilPredictor:
-    """Rule-based turmeric soil fertility predictor."""
+    """Random Forest turmeric soil fertility predictor."""
+
+    def __init__(self):
+        self.rf_model = None
+        self.health_classes = ['poor', 'fair', 'good', 'excellent']
+        self._initialize_random_forest()
+
+    def _initialize_random_forest(self):
+        """Train a synthetic Random Forest model if sklearn is available."""
+        if RandomForestClassifier is None:
+            print("scikit-learn is not installed. Will fallback to rule-based.")
+            return
+
+        print("Training synthetic Random Forest model for soil prediction...")
+        # Generate synthetic data based on our rules
+        X_train = []
+        y_train = []
+        
+        for _ in range(1000):
+            # Generate random soil sample
+            sample = {
+                'ph': random.uniform(4.0, 9.0),
+                'nitrogen': random.uniform(20, 250),
+                'phosphorus': random.uniform(5, 120),
+                'potassium': random.uniform(50, 400),
+                'moisture': random.uniform(20, 100),
+                'organic_carbon': random.uniform(0.1, 4.0),
+                'temperature': random.uniform(15, 45),
+                'humidity': random.uniform(30, 100),
+            }
+            # Score it with the rule-based approach to get the ground truth class
+            param_scores = self._rule_based_parameter_scores(sample)
+            score = self._compute_rule_fertility_score(param_scores)
+            health = self._classify_health(score)
+            
+            # Map health string to index
+            class_idx = self.health_classes.index(health)
+            
+            features = [sample[k] for k in PARAMETER_WEIGHTS.keys()]
+            X_train.append(features)
+            y_train.append(class_idx)
+            
+        self.rf_model = RandomForestClassifier(n_estimators=50, random_state=42)
+        self.rf_model.fit(X_train, y_train)
+        print("Random Forest model trained successfully.")
 
     def predict(self, soil_data: dict) -> dict:
         """Predict soil health and generate actionable recommendations."""
         try:
-            param_scores   = self._parameter_scores(soil_data)
-            fertility_score = self._compute_fertility_score(param_scores)
-            soil_health    = self._classify_health(fertility_score)
+            # We still calculate param_scores for individual component feedback in UI
+            param_scores = self._rule_based_parameter_scores(soil_data)
+            
+            if self.rf_model is not None:
+                # Use Random Forest for prediction
+                features = [soil_data.get(k, 0) for k in PARAMETER_WEIGHTS.keys()]
+                class_idx = self.rf_model.predict([features])[0]
+                probs = self.rf_model.predict_proba([features])[0]
+                soil_health = self.health_classes[class_idx]
+                
+                # Convert the probability distribution into a 0-100 score dynamically
+                fertility_score = 0.0
+                for i, c_idx in enumerate(self.rf_model.classes_):
+                    weight = 25 + (c_idx * 25)  # poor=25, fair=50, good=75, excellent=100
+                    fertility_score += probs[i] * weight
+            else:
+                # Fallback to pure rule-based
+                fertility_score = self._compute_rule_fertility_score(param_scores)
+                soil_health = self._classify_health(fertility_score)
+                
             recommendations = self._generate_recommendations(soil_data, fertility_score)
 
             return {
@@ -63,11 +128,10 @@ class SoilPredictor:
             }
 
     # ------------------------------------------------------------------
-    # Internal helpers
+    # Rule-Based Fallbacks and Feature Generators
     # ------------------------------------------------------------------
 
     def _score_parameter(self, value: Optional[float], p_min: float, p_max: float, p_optimal: float) -> float:
-        """Score a single soil parameter on a 0-100 scale."""
         if value is None:
             return 50.0
         if p_min <= value <= p_max:
@@ -81,7 +145,7 @@ class SoilPredictor:
             excess = (value - p_max) / max(p_max, 1e-6)
             return max(0.0, 60.0 - excess * 60.0)
 
-    def _parameter_scores(self, soil_data: dict) -> dict:
+    def _rule_based_parameter_scores(self, soil_data: dict) -> dict:
         scores = {}
         for param, (mn, mx, op) in PARAM_CONDITION_KEYS.items():
             val = soil_data.get(param)
@@ -91,7 +155,7 @@ class SoilPredictor:
             )
         return scores
 
-    def _compute_fertility_score(self, param_scores: dict) -> float:
+    def _compute_rule_fertility_score(self, param_scores: dict) -> float:
         total = sum(param_scores.get(p, 50.0) * w for p, w in PARAMETER_WEIGHTS.items())
         return max(0.0, min(100.0, total))
 

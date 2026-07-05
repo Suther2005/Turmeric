@@ -163,7 +163,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-display font-bold text-4xl text-white">How TurmeriCare Works</h2>
-            <p className="text-surface-400 mt-3">8-step AI pipeline — from image upload to expert report</p>
+            <p className="text-surface-400 mt-3">5-step AI pipeline — from image upload to expert report</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">

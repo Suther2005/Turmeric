@@ -6,7 +6,7 @@ from reportlab.lib.units import cm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Table, TableStyle,
-    Spacer, HRFlowable,
+    Spacer, HRFlowable, Image
 )
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
@@ -156,26 +156,49 @@ def generate_report(report_data: dict, output_path: str) -> str:
     score_color = GREEN if crop_score >= 70 else (ORANGE if crop_score >= 40 else colors.red)
     score_style = ParagraphStyle(
         'ScoreDyn', parent=base['Normal'],
-        fontSize=34, textColor=score_color,
+        fontSize=32, textColor=score_color, leading=38,
         alignment=TA_CENTER, fontName='Helvetica-Bold',
     )
     score_label_style = ParagraphStyle(
         'ScoreLabel', parent=base['Normal'],
-        fontSize=10, textColor=colors.grey,
+        fontSize=10, textColor=colors.grey, leading=12,
         alignment=TA_CENTER,
     )
     score_box = Table(
         [[Paragraph('Crop Health Score', score_label_style)], [Paragraph(f'{crop_score:.1f} / 100', score_style)]],
-        colWidths=[16.5*cm],
+        colWidths=[8*cm],
     )
     score_box.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f7fbf6')),
         ('BOX', (0, 0), (-1, -1), 0.8, GREEN),
         ('INNERGRID', (0, 0), (-1, -1), 0, WHITE),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
     ]))
-    elements.append(score_box)
+
+    image_path = disease.get('image_path')
+    if image_path and os.path.exists(image_path):
+        try:
+            img = Image(image_path)
+            aspect = img.imageHeight / float(img.imageWidth)
+            img.drawWidth = 7.5*cm
+            img.drawHeight = 7.5*cm * aspect
+            
+            # Side by side layout
+            top_layout = Table([[img, score_box]], colWidths=[8*cm, 8.5*cm])
+            top_layout.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+            ]))
+            elements.append(top_layout)
+        except Exception as e:
+            print(f"Error loading image for PDF: {e}")
+            elements.append(score_box)
+    else:
+        elements.append(score_box)
+
+    elements.append(Spacer(1, 0.2*cm))
     elements.append(Paragraph(score_note, styles['Subtitle']))
     elements.append(Spacer(1, 0.35*cm))
 

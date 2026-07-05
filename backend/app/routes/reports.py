@@ -106,7 +106,8 @@ def generate():
         disease = prediction.to_dict() if prediction else {}
         if disease:
             disease['plant_part'] = str(disease.get('plant_part', '')).replace('_', ' ').title()
-
+            if disease.get('image_path'):
+                disease['image_path'] = os.path.abspath(os.path.join(current_app.root_path, '..', disease['image_path']))
         report_data = {
             'report_id': report.id,
             'report_date': report.report_date.strftime('%Y-%m-%d %H:%M') if report.report_date else datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M'),
@@ -146,7 +147,8 @@ def generate():
     }), 201
 
 
-@reports_bp.route('/', methods=['GET'])
+@reports_bp.route('/', methods=['GET'], strict_slashes=False)
+@reports_bp.route('', methods=['GET'], strict_slashes=False)
 @jwt_required()
 def list_reports():
     """GET /api/reports/ — list all reports for current user."""

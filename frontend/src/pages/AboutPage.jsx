@@ -7,7 +7,7 @@ import {
 const TECH_STACK = [
   { layer: 'Frontend',  items: ['React 18', 'Vite', 'Tailwind CSS', 'Chart.js', 'React Router', 'Axios'] },
   { layer: 'Backend',   items: ['Python 3.10', 'Flask REST API', 'SQLAlchemy', 'JWT Auth', 'Flask-CORS'] },
-  { layer: 'AI & ML',   items: ['YOLOv8 (Object Detection)', 'EfficientNet-B0 (Classification)', 'Grad-CAM (Explainability)', 'OpenCV HSV Analysis', 'Random Forest (Soil)'] },
+  { layer: 'AI & ML',   items: ['HSV (Preprocessing)', 'YOLOv8 (Object Detection)', 'EfficientNet-B0 (Primary Classification)', 'Swin Transformer (Secondary Verification)', 'Random Forest (Soil Health)'] },
   { layer: 'Database',  items: ['MySQL 8.0', '5 normalised tables', 'Foreign key relationships', 'Index optimisation'] },
 ];
 
@@ -21,14 +21,11 @@ const DISEASES_DB = [
 ];
 
 const PIPELINE = [
-  { step: '01', title: 'Image Upload & Validation', desc: 'Accepts JPEG/PNG up to 16MB. Validates format and resolution before processing.' },
-  { step: '02', title: 'Preprocessing',             desc: 'CLAHE enhancement, Gaussian noise removal, and resizing to 224×224 for model input.' },
-  { step: '03', title: 'YOLOv8 Detection',          desc: 'Identifies plant parts (leaf, stem, rhizome) and draws bounding boxes around disease regions.' },
-  { step: '04', title: 'EfficientNet-B0 Classification', desc: 'Classifies the detected disease type with confidence scores and top-3 predictions.' },
-  { step: '05', title: 'Grad-CAM Explainability',   desc: 'Generates a heatmap overlaid on the original image showing which pixels drove the prediction.' },
-  { step: '06', title: 'HSV Color Analysis',        desc: 'Quantifies green/yellow/brown percentages to detect chlorosis, necrosis, and stress.' },
-  { step: '07', title: 'Soil Health Prediction',    desc: 'Random Forest model evaluates 8 soil parameters and outputs fertility score + recommendations.' },
-  { step: '08', title: 'Report Generation',         desc: 'ReportLab generates a professional PDF with all findings, heatmaps, and treatment plans.' },
+  { step: '01', title: 'HSV Preprocessing & Color Analysis', desc: 'Isolates the plant from the background and calculates yellowing percentages using OpenCV HSV color space.' },
+  { step: '02', title: 'YOLOv8 Object Detection & Localization', desc: 'Scans the image to detect specific plant parts and draws bounding boxes around diseased regions.' },
+  { step: '03', title: 'EfficientNet-B0 Primary Classification', desc: 'Analyzes the localized crops for fast, lightweight disease classification (Leaf Blotch, Rot, Wilt, etc.).' },
+  { step: '04', title: 'Swin Transformer Secondary Verification', desc: 'Performs complex feature extraction to verify EfficientNet predictions and boost overall confidence.' },
+  { step: '05', title: 'Random Forest Soil Health Prediction', desc: 'Evaluates NPK, pH, and moisture parameters through a Scikit-Learn Random Forest to predict soil fertility.' },
 ];
 
 export default function AboutPage() {
@@ -149,7 +146,7 @@ export default function AboutPage() {
       {/* AI Pipeline */}
       <section className="py-16 px-4 bg-surface-900/50 border-y border-surface-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-display font-bold text-3xl text-white text-center mb-12">8-Step AI Pipeline</h2>
+          <h2 className="font-display font-bold text-3xl text-white text-center mb-12">5-Step AI Pipeline</h2>
           <div className="space-y-4">
             {PIPELINE.map(({ step, title, desc }) => (
               <div key={step} className="flex gap-4 card">

@@ -23,12 +23,11 @@ const DISEASES = [
 ];
 
 const AI_PIPELINE = [
-  'Image uploaded and validated',
-  'Noise removal + CLAHE enhancement',
-  'YOLOv8 detects plant parts & disease regions',
-  'EfficientNet-B0 classifies disease type',
-  'Grad-CAM generates activation heatmap',
-  'OpenCV HSV color health analysis',
+  'HSV Preprocessing & Color Analysis',
+  'YOLOv8 Object Detection & Localization',
+  'EfficientNet-B0 Primary Classification',
+  'Swin Transformer Secondary Verification',
+  'Random Forest Soil Health Prediction',
 ];
 
 const TIPS = [
@@ -38,12 +37,11 @@ const TIPS = [
 ];
 
 const PROCESSING_STEPS = [
-  'Preprocessing image...',
+  'Analyzing HSV color space...',
   'Running YOLOv8 detection...',
   'Classifying with EfficientNet-B0...',
-  'Generating Grad-CAM heatmap...',
-  'Analyzing HSV color space...',
-  'Saving results...',
+  'Verifying with Swin Transformer...',
+  'Predicting soil with Random Forest...',
 ];
 
 export default function UploadPage() {
@@ -70,7 +68,7 @@ export default function UploadPage() {
     try {
       const result = await detectionService.uploadImage(selectedFile, selectedPart);
       toast.success('Analysis complete! 🎯');
-      navigate(`/result/${result.id}`);
+      navigate(`/result/${result.prediction.id}`);
     } catch (err) {
       setProcessing(false);
       setCompletedSteps([]);

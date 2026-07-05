@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
-import HeatmapViewer from '../components/HeatmapViewer';
 import ColorAnalysisChart from '../components/ColorAnalysisChart';
 import { DiseaseBadge, SeverityIndicator, ConfidenceBar } from '../components/DiseaseBadge';
 import { detectionService } from '../services/detectionService';
@@ -32,7 +31,6 @@ const MOCK_RESULT = {
     { disease: 'Healthy',             confidence: 0.04 },
   ],
   pests_detected: [{ name: 'Aphids', confidence: 0.73 }],
-  gradcam_explanation: 'The model focused primarily on the dark brown spots along the leaf margins and mid-vein, which are characteristic lesions of Leaf Blotch caused by Taphrina maculans.',
   recommendations: {
     prevention_tips: [
       'Remove and destroy infected leaves immediately to prevent spread',
@@ -154,13 +152,19 @@ export default function DetectionResultPage() {
           {/* ── Left Column ── */}
           <div className="space-y-6">
 
-            {/* Heatmap Viewer */}
+            {/* Uploaded Image */}
             <div className="card">
-              <HeatmapViewer
-                originalPath={r.image_path}
-                heatmapPath={r.heatmap_path}
-                explanation={r.gradcam_explanation}
-              />
+              <h2 className="text-sm font-semibold text-surface-200 flex items-center gap-2 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-400" />
+                Uploaded Image
+              </h2>
+              <div className="aspect-video bg-surface-900 rounded-xl overflow-hidden border border-surface-700 flex items-center justify-center">
+                {r.image_path ? (
+                  <img src={`http://localhost:5000/${r.image_path.replace(/\\/g, '/')}`} alt="Uploaded plant" className="w-full h-full object-contain" />
+                ) : (
+                  <span className="text-surface-500 text-sm">Image unavailable</span>
+                )}
+              </div>
             </div>
 
             {/* Color Analysis */}

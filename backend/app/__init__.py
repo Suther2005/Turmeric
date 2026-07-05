@@ -76,4 +76,10 @@ def create_app(config_name=None):
     def file_too_large(e):
         return {'error': 'File too large. Maximum size is 16MB.'}, 413
 
+    from flask import send_from_directory
+    @app.route('/uploads/<path:filename>')
+    def serve_uploads(filename):
+        upload_dir = os.path.abspath(app.config.get('UPLOAD_FOLDER', 'uploads'))
+        return send_from_directory(upload_dir, filename)
+
     return app

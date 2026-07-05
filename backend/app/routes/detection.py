@@ -10,7 +10,7 @@ from app.utils.auth_helpers import get_user_from_jwt
 from app.utils.image_processor import preprocess_pipeline
 from app.ai.yolo_detector import YOLODetector
 from app.ai.efficientnet_classifier import EfficientNetClassifier
-from app.ai.gradcam import GradCAMGenerator
+from app.ai.swin_classifier import SwinClassifier
 from app.ai.color_analyzer import ColorAnalyzer
 
 detection_bp = Blueprint('detection', __name__, url_prefix='/api/detection')
@@ -18,7 +18,7 @@ detection_bp = Blueprint('detection', __name__, url_prefix='/api/detection')
 # Initialise AI models once at startup (singletons)
 yolo_detector   = YOLODetector()
 classifier      = EfficientNetClassifier()
-gradcam_gen     = GradCAMGenerator()
+swin_classifier = SwinClassifier()
 color_analyzer  = ColorAnalyzer()
 
 
@@ -85,14 +85,16 @@ def upload_image():
                 'severity': 'mild', 'affected_part': 'leaf', 'top_predictions': [],
             }
 
-        # 4. Grad-CAM heatmap
+        # 4. Swin Transformer Secondary Verification
         try:
-            gradcam_gen    = GradCAMGenerator(upload_folder=upload_folder)
-            gradcam_result = gradcam_gen.generate(image_path, clf_result.get('disease_name', 'Unknown'))
-        except Exception as ge:
-            print(f'Grad-CAM error: {ge}')
-            gradcam_result = {'heatmap_path': image_path, 'explanation_text': 'Heatmap generation failed.'}
-
+            swin_result = swin_classifier.classify(image_path)
+            # Average confidence if the predictions match
+            if swin_result.get('disease_name') == clf_result.get('disease_name'):
+                clf_result['confidence'] = (clf_result['confidence'] + swin_result.get('confidence', 0.5)) / 2.0
+            swin_info = {'verification': swin_result.get('disease_name'), 'confidence': swin_result.get('confidence')}
+        except Exception as se:
+            print(f'Swin error: {se}')
+            swin_info = {'verification': 'Failed'}
         # 5. Color analysis
         try:
             color_result = color_analyzer.analyze(image_path)
@@ -124,7 +126,7 @@ def upload_image():
             affected_part = clf_result.get('affected_part'),
             color_analysis = color_result,
             bounding_boxes = yolo_result.get('disease_regions', []),
-            heatmap_path  = gradcam_result.get('heatmap_path'),
+            heatmap_path  = None,
             status        = 'completed',
             crop_health_score = crop_health_score,
         )
@@ -139,7 +141,7 @@ def upload_image():
             plant_part    = plant_part,
             severity      = clf_result.get('severity'),
             confidence    = clf_result.get('confidence'),
-            notes         = gradcam_result.get('explanation_text', ''),
+            notes         = f"Swin Verification: {swin_info.get('verification')}",
         )
         db.session.add(history)
         db.session.commit()
@@ -149,7 +151,7 @@ def upload_image():
             'prediction':       prediction.to_dict(),
             'yolo':             yolo_result,
             'classification':   clf_result,
-            'gradcam':          gradcam_result,
+            'swin_verification': swin_info,
             'color_analysis':   color_result,
             'crop_health_score': crop_health_score,
         }), 201
