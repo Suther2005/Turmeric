@@ -14,7 +14,7 @@
 | Feature | Description |
 |---|---|
 | 🦠 **Disease Detection** | YOLOv8 object detection + EfficientNet-B0 classification |
-| 🔥 **Grad-CAM Heatmaps** | Explainable AI showing disease activation regions |
+| 🤖 **Swin Transformer** | Secondary AI verification model for high-accuracy checks |
 | 🎨 **Color Analysis** | OpenCV HSV analysis (green/yellow/brown percentages) |
 | 🌱 **Soil Health** | Random Forest model predicting fertility and health |
 | 📊 **Dashboard** | Chart.js charts, health gauges, recent predictions |
@@ -202,7 +202,7 @@ The system automatically detects and loads them.
 
 **Frontend:** React 18, Vite, Tailwind CSS, Chart.js, React Router, Axios, Framer Motion  
 **Backend:** Python 3.10, Flask, SQLAlchemy, JWT, CORS  
-**AI:** YOLOv8, EfficientNet-B0, OpenCV, Grad-CAM, Random Forest  
+**AI:** YOLOv8, EfficientNet-B0, Swin Transformer, OpenCV, Random Forest  
 **Database:** MySQL 8  
 **PDF:** ReportLab
 
